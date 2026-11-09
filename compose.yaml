@@ -1,0 +1,52 @@
+name: uni-nosql
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: nosql_lab
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: lab_password
+    ports:
+      - "127.0.0.1:55432:5432"
+    mem_limit: 1g
+    cpus: 2
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lab -d nosql_lab"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  mongo:
+    image: mongo:8.0
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+    ports:
+      - "127.0.0.1:57017:27017"
+    mem_limit: 1g
+    cpus: 2
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  redis:
+    image: redis:7.4
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "127.0.0.1:56379:6379"
+    mem_limit: 128m
+    cpus: 1
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+volumes:
+  postgres_data:
+  mongo_data:
